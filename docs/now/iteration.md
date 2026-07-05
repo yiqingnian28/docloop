@@ -10,7 +10,7 @@ T-006 发布（i01 结转）；不含机制新特性。
 
 ## 任务清单
 
-- [ ] T-006 英文 README + README.zh-CN + 发布 GitHub（i01 结转）
+- [x] T-006 英文 README + README.zh-CN + 发布 GitHub（i01 结转）
 
 ## Open Questions
 

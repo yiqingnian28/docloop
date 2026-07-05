@@ -1,41 +1,77 @@
 # docloop
 
-> 面向 AI 协作开发的项目文档维护机制：真相滚动改写、过程按迭代冻结、历史默认离场——让文档始终保持在模型上下文能驾驭的体积内。
+[简体中文](./README.zh-CN.md)
 
-## 为什么需要它
+> A project-documentation maintenance mechanism for AI-assisted development: truth is rewritten in place, work-in-progress is frozen per iteration, history leaves the context by default — so the doc tree always stays within what a model's context window can actually handle.
 
-AI 时代的项目文档有一对天然矛盾：
+## The problem
 
-- AI 干活需要**准确、够细**的上下文（需求、设计、约定）；
-- 但需求频繁变更，变化逐层传导（需求 → 设计文档 → 代码），变化记录随时间无限堆积，文档越来越臃肿，最终**超出模型上下文的驾驭范围**，人也维护不动。
+AI-era project docs live inside a built-in contradiction:
 
-docloop 的答案：**按知识的"时间性"分层，让"变化"有自己的家，用体积预算和定期体检强制文档不长胖、不腐烂。**
+- agents need **accurate, detailed** context (requirements, design, conventions) to do real work;
+- but requirements keep changing, changes cascade (PRD → design → code), change records pile up, and the docs eventually **outgrow the model's context window** — and the humans' patience.
 
-## 核心思想（五句话）
+docloop's answer: **layer knowledge by its age, give "change" a home of its own, and enforce size budgets plus periodic health checks so docs can't get fat or rot.**
 
-1. **三层分家**：`truth/`（当前真相·滚动改写）、`now/`（本迭代活文档·结束清空）、`past/`（史料·只增不改·默认不进上下文）。真相的体积只随系统复杂度增长，不随时间增长。
-2. **变更是一等公民**：需求一变开一张变更单（CH），传导链（变了啥 → 波及哪些设计 → 哪些任务）集中在一张纸上；真相文档只被改写，不记流水。
-3. **人是不可靠的信源**：纪要/聊天等原始素材进 inbox 待裁决——AI 负责大海捞针找矛盾，人负责拍板；裁决过的才能改写权威层。
-4. **完整性靠账本不靠摘要**：上游 PRD 挂锚 + 摘编（管对齐）+ 条目账本（管对账），结算时每条需求必有归属，不允许默默消失。
-5. **体积是硬指标**：开工必读集有预算、单文档有上限，超限 lint 报错、强制拆分或提前结算；定期体检抓腐烂。
+## Core model
 
-## 与 sdd-riper 的关系
+| Layer | Nature | Growth law |
+|---|---|---|
+| `docs/truth/` | Current design truth, **rewritten** in place | grows only with system complexity |
+| `docs/now/` | This iteration's live docs (tasks / change orders / inbox) | grows within an iteration, **cleared** at settle |
+| `docs/past/` | Frozen iteration packages, append-only | grows with time, **out of context by default** |
 
-[sdd-riper](https://github.com/huisezhiyin/sdd-riper) 管**一个任务怎么推进**（RIPER 阶段门禁、证据验收）；docloop 管**知识住在哪、怎么流动、怎么老化**。任务包 = Feature Spec，落点经项目 AGENTS.md 映射。两者是同一套方法论的两件套。
+Five invariants (the constitution):
 
-## 仓库地图
+1. **Truth grows with complexity, not time** — rewrite, never append; no timelines inside truth (history belongs to git and `past/`).
+2. **`now/` is cleared every iteration** — frozen wholesale into `past/`; the new iteration starts clean.
+3. **`past/` stays out of the model context** — the only citable history is each iteration's one-page `summary.md`.
+4. **Rule files (AGENTS.md) hold rules only** — project status lives solely in `now/iteration.md`.
+5. **Requirement-driven rewrites of the authoritative layer must pass change-order (CH) adjudication** — raw material (meeting notes / chat) never becomes an implementation basis directly.
 
-| 位置 | 内容 |
+## The loop
+
+`open iteration → record changes (CH) → lint → settle & freeze` — the four rituals that give docloop its name.
+
+- **Changes flow one way**: inbox (raw, stored as-is) → AI drafts a CH with a **conflict report** (checked against the item ledger, truth incl. decisions, and this iteration's CHs) → a named human adjudicates → only then is the authoritative layer rewritten.
+- **Upstream docs (PRD / design specs) enter as anchor + digest + item ledger** — never a full copy. The digest (≤150 lines) handles alignment; the per-item ledger handles completeness: at settle every item must be implemented (with evidence), explicitly deferred, or explicitly rejected. Nothing disappears silently.
+- **Size is a hard gauge**: per-file budgets, plus the boot set (what an agent must read to start work) is actually computed per open task and capped.
+
+## Quick start
+
+1. **Install the skill** — copy `skills/docloop/` into your agent's skill directory (Claude Code: `.claude/skills/docloop/`; Codex and others: keep a `skills/` folder in the workspace and route via AGENTS.md).
+2. **Initialize a project** — tell the agent:
+
+```text
+Use docloop to initialize this project's documentation (init).
+```
+
+The init ritual builds the three-layer `docs/` skeleton, writes the AGENTS.md section (boot protocol, rules, sdd-riper path mapping), and opens the first iteration.
+
+3. **Health-check anytime** (zero-dependency, Node ≥18):
+
+```text
+node <skill-dir>/scripts/docloop_lint.mjs [project-root]
+```
+
+Six checks: structure & naming · size budgets (lines + bytes) · dead links & ID references · rot detection (`verified:` date vs git activity on `code:` globs) · orphaned ledger items · inbox backlog. **Red blocks settlement (exit 1); yellow reminds.**
+
+## Works with sdd-riper
+
+[sdd-riper](https://github.com/huisezhiyin/sdd-riper) drives **how a single task moves forward** (RIPER gates, checkpoints, evidence-based acceptance); docloop governs **where knowledge lives, how it flows, how it ages**. A docloop task package *is* the sdd-riper Feature Spec — the same file, routed via AGENTS.md path mapping. Recommended pairing, not a hard dependency: without sdd-riper the task package degrades to a plain task doc and the mechanism still runs.
+
+## Repository map
+
+| Path | What it is |
 |---|---|
-| [`docs/truth/mechanism/`](docs/truth/mechanism/README.md) | 机制规范（分层 / 上游接入 / 变更裁决 / 生命周期 / 预算体检 / sdd-riper 适配 / 用例全景） |
-| [`docs/truth/decisions.md`](docs/truth/decisions.md) | 已定决策 |
-| [`docs/now/iteration.md`](docs/now/iteration.md) | 当前迭代（项目状态只活在这里） |
-| `templates/` | 各类文档模板（待做） |
-| `lint/` | 体检脚本（待做） |
-| `examples/` | 微型示例项目（待做） |
+| [`skills/docloop/`](skills/docloop/README.md) | The installable skill: kernel (`SKILL.md`), five rituals, all templates, lint script, Codex adapter |
+| [`docs/truth/mechanism/`](docs/truth/mechanism/README.md) | The mechanism's full specification — the skill is its distribution; truth wins |
+| [`docs/truth/decisions.md`](docs/truth/decisions.md) | Standing decisions (D-001+) |
+| [`examples/mini/`](examples/mini/README.md) | Complete two-iteration lifecycle walkthrough (a tiny bookmark manager) |
+| [`docs/now/iteration.md`](docs/now/iteration.md) | Current iteration — project status lives only here |
 
-**本仓自举**：docloop 仓库自己就用 docloop 的结构维护。
+**Self-hosted**: this repository maintains itself with docloop. Its first change order, first settlement and first frozen iteration are real and in the history (`docs/past/`).
 
-## 状态
+## Status
 
-设计期——机制骨干已定稿，模板 / 体检脚本 / 示例待做。中文为主，发布 GitHub 前补英文 README。
+Mechanism v1 landed: spec, skill, lint and example are all in place, self-lint green. Body docs are Chinese-first (decision D-002); this README is the English entry.
