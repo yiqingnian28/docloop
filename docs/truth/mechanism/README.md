@@ -1,6 +1,13 @@
+---
+verified: 2026-07-05
+code:
+  - skills/docloop/**
+---
+
 # docloop 机制规范 · 总述
 
 > 本目录是机制的**当前真相**（滚动改写·历史看 git）。一句话：**按知识的时间性分三层，变更单当一等公民，体积预算 + 定期体检强制文档不长胖、不腐烂。**
+> 发行形态：以单入口 skill（`skills/docloop/`）打包供目标项目安装；**skill 是本目录真相的发行版，truth 为准**（D-011）。
 
 ## 解决什么问题
 
@@ -25,9 +32,9 @@
 docs/
 ├── README.md                 # 导航 + 开工协议
 ├── truth/                    # 真相层（滚动改写·体积受限）
-│   ├── architecture.md       #   架构总纲
+│   ├── architecture.md       #   架构总纲（可选·复杂度到了再建）
 │   ├── decisions.md          #   已定决策（ADR 索引）
-│   ├── glossary.md           #   术语
+│   ├── glossary.md           #   术语（可选）
 │   ├── sources/              #   上游接入（人产文档 → AI 可消化）
 │   │   ├── index.md          #     登记簿：每份上游文档一行
 │   │   └── S-##_<名>/
@@ -54,7 +61,7 @@ docs/
 2. **now 每迭代结束必清空**——整体冻结搬进 past/，新迭代从干净的 now/ 开始。
 3. **past 默认不进模型上下文**——唯一可被日常引用的史料是各迭代 `summary.md`（≤1 页）。
 4. **规矩文件只放规矩，不放项目状态**——AGENTS.md / CLAUDE.md 里没有"现在到哪了"；状态活在 `now/iteration.md`。
-5. **权威层只能经 CH 裁决改写**——原始素材（纪要 / 聊天 / 口头需求）永不直接成为实现依据。
+5. **需求驱动的权威层改写必须经 CH 裁决**——原始素材（纪要 / 聊天 / 口头需求）永不直接成为实现依据；实现驱动的 Reverse Sync 与 codemap 刷新可直接改写，涉及需求理解变化时补 CH（见 [change.md](change.md)）。
 
 ## 章节导航
 
@@ -66,4 +73,4 @@ docs/
 | [lifecycle.md](lifecycle.md) | 迭代生命周期：四仪式 + 结算清单 |
 | [budget-lint.md](budget-lint.md) | 上下文预算 + 体检（lint）规则 |
 | [sdd-riper.md](sdd-riper.md) | 与 sdd-riper 的分工与落点映射 |
-| [use-cases.md](use-cases.md) | 支持用例全景（7 类 33 例·验收范围） |
+| [use-cases.md](use-cases.md) | 支持用例全景（验收范围） |

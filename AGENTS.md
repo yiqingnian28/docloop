@@ -16,6 +16,8 @@
 - **中文通俗**：正文用通俗易懂的中文，少堆术语。
 - **单一真相源**：同一事实只在一处权威，别处只链接。
 - **体积预算**：真相章节 ≤300 行，超限拆分（规则见 `docs/truth/mechanism/budget-lint.md`）。
+- **本仓模块根**：自举场景下机制即唯一模块，模块根 = `docs/truth/mechanism/`（lint 模块根可配置）。
+- **truth ↔ skill 同步**：`skills/docloop/` 是 truth 的发行版（D-011）——改写 `docs/truth/mechanism/` 时检查 skill 是否需同步，结算时核对，truth 为准。
 - **任务执行用 sdd-riper**（one / light）；Feature Spec 落 `docs/now/tasks/`，落点映射见 [`docs/truth/mechanism/sdd-riper.md`](docs/truth/mechanism/sdd-riper.md)。
 
 ## 迭代节奏

@@ -1,6 +1,11 @@
+---
+verified: 2026-07-05
+---
+
 # 与 sdd-riper 的分工与落点映射
 
 > 上级：[总述](README.md)。docloop 依赖 [sdd-riper](https://github.com/huisezhiyin/sdd-riper)：**sdd-riper 管"一个任务怎么推进"**（RIPER 阶段、门禁、证据验收、Reverse Sync），**docloop 管"知识住在哪、怎么流动、怎么老化"**。两者是同一套方法论的两件套。
+> 依赖强度是**约定级推荐搭配**：不装 sdd-riper 时，任务包退化为普通任务文档，机制照常运转。
 
 ## 调研结论：路径可重映射（2026-07-04 核实）
 
@@ -31,6 +36,7 @@ sdd-riper 的 `mydocs/*` 路径**只是默认建议，不是硬编码逻辑**：
 Feature Spec → docs/now/tasks/T-###_<名>.md · context → docs/now/context/
 handoff → docs/now/handoff/ · codemap → docs/truth/codemap/
 Project Spec/Memory 不设：长期真相= docs/truth/，规矩=本文件。
+truth/sources/（登记簿/摘编/账本）只能经 CH 裁决改写，Project Sync Candidate 不得直写。
 archive 由迭代结算的 summary 取代。
 ```
 
