@@ -8,7 +8,7 @@
 
 - [x] T-001 机制 spec 骨干落盘（truth/mechanism 七章 + 用例全景 + 决策记录）
 - [x] T-002 spec 人工评审收敛（22 项裁决改写 + OQ-1~5 关闭 + CH-001）
-- [ ] T-003 skills/docloop/ 骨架：SKILL.md 常驻内核 + references/（仪式一站一文件 + 全套模板）+ agents/openai.yaml
+- [x] T-003 skills/docloop/ 骨架：SKILL.md 常驻内核 + references/（仪式一站一文件 + 全套模板）+ agents/openai.yaml
 - [ ] T-004 体检脚本 skills/docloop/scripts/docloop_lint.mjs（六项检查 · 零依赖 node · D-012）
 - [ ] T-005 examples/mini 微型示例项目（走一遍完整生命周期）
 - [ ] T-006 （未来）英文 README + 发布 GitHub

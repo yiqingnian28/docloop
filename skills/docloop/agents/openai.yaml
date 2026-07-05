@@ -1,0 +1,4 @@
+interface:
+  display_name: "docloop"
+  short_description: "truth/now/past 三层项目文档机制：上游接入、变更裁决、迭代结算、体积体检。"
+  default_prompt: "Use the docloop skill to maintain this project's documentation: initialize the three-layer docs/ structure (truth/now/past), ingest upstream documents as anchor + digest + item ledger, route requirement changes through change orders (CH) with conflict checks for human adjudication, run iteration open/settle rituals, and lint the docs tree (budgets, dead links, rot, orphan items, inbox backlog)."
