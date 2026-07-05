@@ -28,4 +28,4 @@ node <本skill目录>/scripts/docloop_lint.mjs [项目根] [--config docloop.con
   - 疑似腐烂 → 人工核对：真腐了先改文档再更新 `verified:`，没腐只更新日期；
   - 孤儿条目 → 排期(T-###) / 挂起回链 CH / 显式否决，三选一；
   - inbox 积压 → 走 `rituals/change.md` 清掉。
-- 结算时黄项必须逐条写进 summary 未了事项（见 `rituals/iterate.md` 第 7 步）。
+- 结算时黄项必须逐条写进 summary 未了事项（见 `rituals/iterate.md` 第 8 步）。
