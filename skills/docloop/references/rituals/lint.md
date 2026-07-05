@@ -16,7 +16,7 @@ node <本skill目录>/scripts/docloop_lint.mjs [项目根] [--config docloop.con
 | 2 | 体积超限 | 各档预算（行数 + 字节双口径，任一超即超）+ 每个开放任务的 boot set 实算取最大 |
 | 3 | 死链 | 文档链接指向存在目标；ID 引用（T/CH/S）在 now/ 与 past/ 两处解析 |
 | 4 | 腐烂检测 | frontmatter `verified:` vs `code:` glob 内代码的 git 活跃度；未声明 code: 退化为日期阈值 |
-| 5 | 孤儿条目 | 账本里未排期且跨过 ≥1 个已结算迭代的条目；任务 covers 声称完成但账本未勾 |
+| 5 | 孤儿条目 | 账本里未排期且跨过 ≥1 个已结算迭代的条目（v1 近似：past 非空即对未排期条目提醒）；任务 covers 声称完成但账本未勾 |
 | 6 | inbox 积压 | 未裁决素材躺尸标黄 |
 
 ## 红黄分级与修复
