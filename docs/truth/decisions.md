@@ -1,5 +1,5 @@
 ---
-verified: 2026-07-05
+verified: 2026-07-07
 ---
 
 # 已定决策
@@ -22,3 +22,4 @@ verified: 2026-07-05
 | D-011 | 2026-07-05 | 发行形态：**单入口 skill**（`skills/docloop/`），skill 是 truth 的发行版、truth 为准 | 常驻内核 ≤150 行，references 按仪式一站一文件（将来要拆机械可拆）；对比拆多个：闲置广告位成本 1/5、仪式共享同一棵 docs/ 树且互相咬合（CH-001） |
 | D-012 | 2026-07-05 | lint 为**零依赖 Node（≥18）单脚本**，随 skill 发行于 scripts/ | 单文件跨平台，Claude Code / Codex 环境必备 node；python（sdd-riper 生态）落选——两边脚本互不调用，不值得引入第二语言栈 |
 | D-013 | 2026-07-05 | 腐烂映射：truth 模块文档 frontmatter 声明 `code:` glob | 映射跟文档走不易腐（否则映射本身先腐）；未声明者退化为纯日期阈值黄标 |
+| D-014 | 2026-07-07 | **阅读面检查与结构检查分界**：结构类检查（1–6）只认装机结构；阅读面类检查（第 7 项）可经 `truthDirs` 扫迁移期 truth-like 路径，docs/truth 之外只黄不红；**结算门禁必须确定性，LLM 永不进阻断面** | issue #2 实战反馈（CH-004）；探测归零依赖脚本，语义判定与改写归 skill 内 agent（recipe 即提示词），拍板归人 |

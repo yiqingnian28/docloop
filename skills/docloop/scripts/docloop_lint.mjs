@@ -26,6 +26,11 @@ const DEFAULTS = {
   rotCommits: 10, // 声明 code: 的文档：verified 之后 glob 内提交超此数标黄
   historyWords: ['已作废', '已废弃', '已弃用', '旧口径', '旧方案', '原方案', '旧版本', '待确认', '此前', '曾经', '后来改为', '现改为', '最初'],
   historyDensityPer100: 5, // truth 文档过程性词汇每百行命中超此数标黄
+  truthDirs: ['docs/truth'], // 阅读面检查（第 7 项）扫描面；可追加迁移期 truth-like 路径，docs/truth 之外只黄不红（D-014）
+  noiseWords: ['机器预检', '附C', '待落码', '人天', '排期', '工时'], // 7b 信号词（"证据"等常用词不进默认表防误伤）
+  noiseMinSignals: 3, // 一行命中信号类别数达到此值计噪声行
+  noiseLinePer100: 10, // 散文噪声行每百行超此数标黄
+  cellMaxChars: 200, // 单条 bullet / 表格单元格最大字符数（7c）
 };
 let config = JSON.parse(JSON.stringify(DEFAULTS));
 const cfgFile = configPath ? path.resolve(configPath) : path.join(root, 'docloop.config.json');
@@ -90,8 +95,10 @@ const findings = []; // {check, level, msg}
 const red = (check, msg) => findings.push({ check, level: '红', msg });
 const yellow = (check, msg) => findings.push({ check, level: '黄', msg });
 
-if (!exists(DOCS)) {
-  console.error(`✗ 找不到 ${rel(DOCS)}/ —— 这不是 docloop 项目，或先跑装机仪式（init）`);
+const TRUTH_DIRS = (Array.isArray(config.truthDirs) ? config.truthDirs : [config.truthDirs]).map((d) => path.join(root, d));
+const structurePresent = exists(DOCS);
+if (!structurePresent && !TRUTH_DIRS.some(exists)) {
+  console.error(`✗ 找不到 ${rel(DOCS)}/ 或任何 truthDirs 路径 —— 这不是 docloop 项目，或先跑装机仪式（init）`);
   process.exit(1);
 }
 
@@ -135,7 +142,7 @@ function resolveId(id) {
 }
 
 // ---------- 1 目录合规 ----------
-{
+if (structurePresent) {
   if (!exists(TRUTH)) red(1, 'docs/truth/ 不存在');
   if (!exists(NOW)) red(1, 'docs/now/ 不存在');
   if (!exists(iterFile)) red(1, 'docs/now/iteration.md 不存在（项目状态唯一的家）');
@@ -177,7 +184,7 @@ function resolveId(id) {
 }
 
 // ---------- 2 体积超限（行 + 字节双口径，任一超即超） ----------
-{
+if (structurePresent) {
   const over = (file, cap) => {
     const t = read(file);
     const L = countLines(t);
@@ -221,7 +228,7 @@ function resolveId(id) {
 }
 
 // ---------- 3 死链（markdown 链接 + ID 引用；ID 在 now 与 past 两处解析） ----------
-{
+if (structurePresent) {
   // past/ 冻结原件不查：相对链接随整体搬迁失效属已知，考古一律经 summary 进入
   const sep = path.sep;
   const scanFiles = [path.join(root, 'AGENTS.md'), path.join(root, 'CLAUDE.md'), path.join(DOCS, 'README.md')]
@@ -243,7 +250,7 @@ function resolveId(id) {
 }
 
 // ---------- 4 腐烂检测（黄） ----------
-{
+if (structurePresent) {
   const gitOk = (() => {
     try {
       execFileSync('git', ['rev-parse', '--git-dir'], { cwd: root, stdio: 'pipe' });
@@ -290,7 +297,7 @@ function resolveId(id) {
 }
 
 // ---------- 5 孤儿条目（黄） ----------
-{
+if (structurePresent) {
   const ledger = [];
   for (const f of itemsFiles) {
     for (const line of read(f).split('\n')) {
@@ -324,7 +331,7 @@ function resolveId(id) {
 }
 
 // ---------- 6 inbox 积压（黄） ----------
-{
+if (structurePresent) {
   const inbox = path.join(NOW, 'inbox');
   if (exists(inbox)) {
     const chText = nowChanges.map(read).join('\n');
@@ -336,35 +343,81 @@ function resolveId(id) {
   }
 }
 
-// ---------- 7 历史痕迹密度（truth 正文历史化检测） ----------
+// ---------- 7 历史痕迹与阅读面噪声（truth 正文历史化 / 审计报告化检测；唯一可扫 truthDirs 的检查，D-014） ----------
 {
   const compoundPat = /(变更|修订|更新|进展|演进|历史)\s*(历史|记录|流水|日志|时间线)|changelog|change\s*log|revision\s+history/i;
   const bareTitlePat = /^(历史|时间线|history)$/i;
-  for (const f of mdFiles(TRUTH)) {
-    const text = stripCode(read(f));
-    for (const m of text.matchAll(/^#{1,6}\s+(.+?)\s*$/gm)) {
-      if (compoundPat.test(m[1]) || bareTitlePat.test(m[1]))
-        red(7, `${rel(f)} 出现时间线/变更历史小节：「${m[1]}」——不变量 1：truth 只写当前口径，历史归 git 与 past/`);
-    }
-    const lines = countLines(text);
-    if (!lines) continue;
-    const found = [];
-    let hits = 0;
-    for (const w of config.historyWords) {
-      const n = text.split(w).length - 1;
-      if (n > 0) {
-        hits += n;
-        found.push(`${w}×${n}`);
+  const idPat = /(?<![\w.])(T-\d{3}|CH-\d{3}|S-\d{2}(?:\.R-\d{3})?|D-\d{3}|OQ-\d+)(?![\w.])/;
+  const datePat = /\d{4}[-/.年]\d{1,2}(?:[-/.月]\d{1,2}日?)?|\d{1,2}月\d{1,2}日/;
+  const anchorPat = /[\w./-]+\.(?:md|mjs|cjs|jsx?|tsx?|py|json|ya?ml|go|rs|java|kt|css|html)(?::\d+)?|第\s*\d+\s*行/;
+  const parenPat = /[（(][^（）()]{30,}[）)]/;
+  const hint = '建议按 rituals/lint.md 的改写 recipe 拆：当前规则表 + 实现边界表 + 追溯/证据链接';
+  // 信号统计前剥 markdown 链接目标——规范引用（链接、行内代码锚点）正是机制要的写法，裸写的才算噪声
+  const stripLinks = (t) => t.replace(/\]\([^)]*\)/g, ']');
+  for (const dir of TRUTH_DIRS) {
+    if (!exists(dir)) continue;
+    const isCore = path.resolve(dir) === path.resolve(TRUTH);
+    const mark = isCore ? red : yellow; // docs/truth 之外只黄不红：不变量只对装机结构有强制力（D-014）
+    const softNote = isCore ? '' : '（truth-like 迁移期路径，提示不阻断）';
+    for (const f of mdFiles(dir)) {
+      const raw = read(f);
+      const text = stripCode(raw);
+      // 7a-红：时间线 / 变更历史小节标题
+      for (const m of text.matchAll(/^#{1,6}\s+(.+?)\s*$/gm)) {
+        if (compoundPat.test(m[1]) || bareTitlePat.test(m[1]))
+          mark(7, `${rel(f)} 出现时间线/变更历史小节：「${m[1]}」——truth 只写当前口径，历史归 git 与 past/${softNote}`);
       }
+      // 7a-黄：过程性词汇密度
+      const lines = countLines(text);
+      if (!lines) continue;
+      const found = [];
+      let hits = 0;
+      for (const w of config.historyWords) {
+        const n = text.split(w).length - 1;
+        if (n > 0) {
+          hits += n;
+          found.push(`${w}×${n}`);
+        }
+      }
+      const per100 = (hits * 100) / lines;
+      if (per100 > config.historyDensityPer100)
+        yellow(7, `${rel(f)} 正文历史化嫌疑：过程性词汇 ${hits} 次 / ${lines} 行（每百行 ${per100.toFixed(1)} > ${config.historyDensityPer100}）——${found.join('、')}。${hint}`);
+      // 7b/7c 扫描面：剥 frontmatter（verified: 日期不是正文噪声）再剥代码与链接目标
+      const fmEnd = raw.startsWith('---') ? raw.indexOf('\n---', 3) : -1;
+      const body = stripLinks(stripCode(fmEnd === -1 ? raw : raw.slice(fmEnd + 4))).split('\n');
+      // 7b-黄：噪声行——散文 / bullet 同行混排多类信号；表格 / 台账行（含 ≥2 个管道符，如登记簿裸管道行）与标题不计——台账密集是契约
+      const isLedger = (s) => s.split('|').length >= 3;
+      const prose = body.map((l) => l.trim()).filter((s) => s && !isLedger(s) && !s.startsWith('|') && !s.startsWith('#'));
+      const noisy = [];
+      for (const s of prose) {
+        let sig = 0;
+        if (idPat.test(s)) sig++;
+        if (datePat.test(s)) sig++;
+        if (anchorPat.test(s)) sig++;
+        if (config.noiseWords.some((w) => s.includes(w))) sig++;
+        if (parenPat.test(s)) sig++;
+        if (sig >= config.noiseMinSignals) noisy.push(s);
+      }
+      const nPer100 = prose.length ? (noisy.length * 100) / prose.length : 0;
+      if (nPer100 > config.noiseLinePer100)
+        yellow(7, `${rel(f)} 阅读面噪声：${noisy.length}/${prose.length} 行混排多类信号（每百行 ${nPer100.toFixed(1)} > ${config.noiseLinePer100}）——这段像证据明细。${hint}。示例：「${noisy[0].slice(0, 50)}…」`);
+      // 7c-黄：超长 bullet / 表格单元格
+      const units = [];
+      for (const l of body) {
+        const s = l.trim();
+        if (isLedger(s) || s.startsWith('|')) units.push(...s.split('|').map((c) => c.trim()).filter(Boolean));
+        else if (/^[-*+]\s/.test(s)) units.push(s);
+      }
+      const over = units.filter((u) => [...u].length > config.cellMaxChars);
+      if (over.length)
+        yellow(7, `${rel(f)} ${over.length} 个超长 bullet/单元格（最长 ${Math.max(...over.map((u) => [...u].length))} 字 > ${config.cellMaxChars}）。${hint}`);
     }
-    const per100 = (hits * 100) / lines;
-    if (per100 > config.historyDensityPer100)
-      yellow(7, `${rel(f)} 正文历史化嫌疑：过程性词汇 ${hits} 次 / ${lines} 行（每百行 ${per100.toFixed(1)} > ${config.historyDensityPer100}）——${found.join('、')}`);
   }
+  if (!structurePresent) yellow(7, `未装机（无 ${config.docsDir}/）：仅跑阅读面检查，结构检查 1–6 跳过——迁移坡道，装机是正道（rituals/init.md）`);
 }
 
 // ---------- 报告 ----------
-const NAMES = { 1: '目录合规', 2: '体积超限', 3: '死链', 4: '腐烂检测', 5: '孤儿条目', 6: 'inbox 积压', 7: '历史痕迹密度' };
+const NAMES = { 1: '目录合规', 2: '体积超限', 3: '死链', 4: '腐烂检测', 5: '孤儿条目', 6: 'inbox 积压', 7: '历史痕迹与阅读面噪声' };
 const reds = findings.filter((f) => f.level === '红');
 const yels = findings.filter((f) => f.level === '黄');
 console.log(`docloop 体检 · ${root}`);
