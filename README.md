@@ -54,7 +54,7 @@ The init ritual builds the three-layer `docs/` skeleton, writes the AGENTS.md se
 node <skill-dir>/scripts/docloop_lint.mjs [project-root]
 ```
 
-Six checks: structure & naming · size budgets (lines + bytes) · dead links & ID references · rot detection (`verified:` date vs git activity on `code:` globs) · orphaned ledger items · inbox backlog. **Red blocks settlement (exit 1); yellow reminds.**
+Seven checks: structure & naming · size budgets (lines + bytes) · dead links & ID references · rot detection (`verified:` date vs git activity on `code:` globs) · orphaned ledger items · inbox backlog · history-trace density (truth docs turning into changelogs). **Red blocks settlement (exit 1); yellow reminds.**
 
 ## Works with sdd-riper
 

@@ -8,7 +8,7 @@ node <本skill目录>/scripts/docloop_lint.mjs [项目根] [--config docloop.con
 
 预算默认值内置；目标项目根放 `docloop.config.json` 可覆盖（预算数值、模块根等路径）。
 
-## 六项检查
+## 七项检查
 
 | # | 检查 | 判定 |
 |---|---|---|
@@ -18,14 +18,17 @@ node <本skill目录>/scripts/docloop_lint.mjs [项目根] [--config docloop.con
 | 4 | 腐烂检测 | frontmatter `verified:` vs `code:` glob 内代码的 git 活跃度；未声明 code: 退化为日期阈值 |
 | 5 | 孤儿条目 | 账本里未排期且跨过 ≥1 个已结算迭代的条目（v1 近似：past 非空即对未排期条目提醒）；任务 covers 声称完成但账本未勾 |
 | 6 | inbox 积压 | 未裁决素材躺尸标黄 |
+| 7 | 历史痕迹密度 | truth 出现"变更历史 / 修订记录 / 进展时间线"类小节标题红；过程性词汇（已作废 / 旧口径 / 待确认 等，`historyWords` 可配）密度超阈值（默认每百行 > 5 次，`historyDensityPer100`）黄；代码块不计 |
 
 ## 红黄分级与修复
 
 - **红**（违反不变量 / 超硬预算，阻断结算）：
   - 体积超限 → 拆分或压缩（模块拆目录、任务拆包、摘编瘦身）；
-  - 死链 → 修链接或补目标；目录 / 命名不合规 → 归位改名；编号重复 → 重新编号。
+  - 死链 → 修链接或补目标；目录 / 命名不合规 → 归位改名；编号重复 → 重新编号；
+  - 时间线 / 变更历史小节 → 历史内容迁出 truth（该考古的归 past/ 与 git），正文改写成当前口径。
 - **黄**（提醒不阻断）：
   - 疑似腐烂 → 人工核对：真腐了先改文档再更新 `verified:`，没腐只更新日期；
   - 孤儿条目 → 排期(T-###) / 挂起回链 CH / 显式否决，三选一；
-  - inbox 积压 → 走 `rituals/change.md` 清掉。
+  - inbox 积压 → 走 `rituals/change.md` 清掉；
+  - 过程词密度超阈 → 改写瘦身：把解释性历史痕迹删掉或沉淀进 CH / decisions，只留当前结论。
 - 结算时黄项必须逐条写进 summary 未了事项（见 `rituals/iterate.md` 第 8 步）。

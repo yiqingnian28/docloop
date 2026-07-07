@@ -54,7 +54,7 @@ docloop 的答案：**按知识的"时间性"分层，让"变化"有自己的家
 node <skill目录>/scripts/docloop_lint.mjs [项目根]
 ```
 
-六项检查：目录合规 · 体积超限（行 + 字节）· 死链与 ID 引用 · 腐烂检测（`verified:` 日期 vs `code:` glob 的 git 活跃度）· 孤儿条目 · inbox 积压。**红阻断结算（退出码 1），黄只提醒。**
+七项检查：目录合规 · 体积超限（行 + 字节）· 死链与 ID 引用 · 腐烂检测（`verified:` 日期 vs `code:` glob 的 git 活跃度）· 孤儿条目 · inbox 积压 · 历史痕迹密度（truth 正文历史化检测）。**红阻断结算（退出码 1），黄只提醒。**
 
 ## 与 sdd-riper 搭配
 

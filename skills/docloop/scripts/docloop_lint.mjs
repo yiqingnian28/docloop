@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// docloop 体检脚本 · 六项检查（零依赖 Node ≥18 · D-012）
+// docloop 体检脚本 · 七项检查（零依赖 Node ≥18 · D-012）
 // 用法：node docloop_lint.mjs [项目根] [--config docloop.config.json]
 // 红 = 违反不变量 / 超硬预算（退出码 1，阻断结算）；黄 = 提醒不阻断（退出码 0）
 
@@ -24,6 +24,8 @@ const DEFAULTS = {
   bytesPerLine: 65, // 字节上限 = 行数上限 × 65（≈ 每行一句中文；字节 ÷ 3.5 ≈ token）
   rotDays: 90, // 未声明 code: 的文档：verified 距今超此天数标黄
   rotCommits: 10, // 声明 code: 的文档：verified 之后 glob 内提交超此数标黄
+  historyWords: ['已作废', '已废弃', '已弃用', '旧口径', '旧方案', '原方案', '旧版本', '待确认', '此前', '曾经', '后来改为', '现改为', '最初'],
+  historyDensityPer100: 5, // truth 文档过程性词汇每百行命中超此数标黄
 };
 let config = JSON.parse(JSON.stringify(DEFAULTS));
 const cfgFile = configPath ? path.resolve(configPath) : path.join(root, 'docloop.config.json');
@@ -334,12 +336,39 @@ function resolveId(id) {
   }
 }
 
+// ---------- 7 历史痕迹密度（truth 正文历史化检测） ----------
+{
+  const compoundPat = /(变更|修订|更新|进展|演进|历史)\s*(历史|记录|流水|日志|时间线)|changelog|change\s*log|revision\s+history/i;
+  const bareTitlePat = /^(历史|时间线|history)$/i;
+  for (const f of mdFiles(TRUTH)) {
+    const text = stripCode(read(f));
+    for (const m of text.matchAll(/^#{1,6}\s+(.+?)\s*$/gm)) {
+      if (compoundPat.test(m[1]) || bareTitlePat.test(m[1]))
+        red(7, `${rel(f)} 出现时间线/变更历史小节：「${m[1]}」——不变量 1：truth 只写当前口径，历史归 git 与 past/`);
+    }
+    const lines = countLines(text);
+    if (!lines) continue;
+    const found = [];
+    let hits = 0;
+    for (const w of config.historyWords) {
+      const n = text.split(w).length - 1;
+      if (n > 0) {
+        hits += n;
+        found.push(`${w}×${n}`);
+      }
+    }
+    const per100 = (hits * 100) / lines;
+    if (per100 > config.historyDensityPer100)
+      yellow(7, `${rel(f)} 正文历史化嫌疑：过程性词汇 ${hits} 次 / ${lines} 行（每百行 ${per100.toFixed(1)} > ${config.historyDensityPer100}）——${found.join('、')}`);
+  }
+}
+
 // ---------- 报告 ----------
-const NAMES = { 1: '目录合规', 2: '体积超限', 3: '死链', 4: '腐烂检测', 5: '孤儿条目', 6: 'inbox 积压' };
+const NAMES = { 1: '目录合规', 2: '体积超限', 3: '死链', 4: '腐烂检测', 5: '孤儿条目', 6: 'inbox 积压', 7: '历史痕迹密度' };
 const reds = findings.filter((f) => f.level === '红');
 const yels = findings.filter((f) => f.level === '黄');
 console.log(`docloop 体检 · ${root}`);
-for (let c = 1; c <= 6; c++) {
+for (let c = 1; c <= 7; c++) {
   const list = findings.filter((f) => f.check === c);
   const mark = list.some((f) => f.level === '红') ? '✗' : list.length ? '△' : '✓';
   console.log(`${mark} ${c} ${NAMES[c]}`);

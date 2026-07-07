@@ -1,5 +1,5 @@
 ---
-verified: 2026-07-05
+verified: 2026-07-07
 ---
 
 # 三层模型细则
@@ -13,7 +13,7 @@ verified: 2026-07-05
 **读写规则**：
 
 - 每次变化是**改写成新真相**，不是追加记录。diff 归 git，流水归变更单（CH）。
-- 文档内**禁止**出现"进展时间线 / 变更历史"小节——那是旧机制臃肿的根源。
+- 文档内**禁止**出现"进展时间线 / 变更历史"小节——那是旧机制臃肿的根源（lint 第 7 项执法，见 [budget-lint.md](budget-lint.md)）。
 - 每份 truth 文档头部带 YAML frontmatter：`verified: YYYY-MM-DD`（上次人工确认与代码/现实一致的日期，供腐烂检测用）；模块文档可加 `code:`（glob 列表，声明本模块对应的代码路径，子文件未声明时继承父 README——见 [budget-lint.md](budget-lint.md)）。
 - 技术设计文档**直接以 `modules/<模块>` 为载体在仓库里写**（人 + AI 双受众），评审走 PR diff。
 

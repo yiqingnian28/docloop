@@ -9,7 +9,7 @@
 | `SKILL.md` | 常驻内核：三层模型、五不变量、预算、仪式路由 |
 | `references/rituals/` | 五个仪式：装机 init / 接上游 upstream / 记变更 change / 开迭代·结算 iterate / 体检 lint |
 | `references/templates/` | 全套模板：iteration / task / change(CH) / digest / items / summary / sources-index / agents-md |
-| `scripts/docloop_lint.mjs` | 六项体检脚本（零依赖 Node ≥18） |
+| `scripts/docloop_lint.mjs` | 七项体检脚本（零依赖 Node ≥18） |
 | `agents/openai.yaml` | Codex 适配 |
 
 ## 快速开始
