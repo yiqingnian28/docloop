@@ -31,6 +31,13 @@ const DEFAULTS = {
   noiseMinSignals: 3, // 一行命中信号类别数达到此值计噪声行
   noiseLinePer100: 10, // 散文噪声行每百行超此数标黄
   cellMaxChars: 200, // 单条 bullet / 表格单元格最大字符数（7c）
+  noiseTitleWords: ['裁定反转', '口径反转', '多次反转', '字段欠账', '编码现状', '机器预检', '已落码', '核验结论'], // 7a 标题追溯/欠账词表（强嫌疑非实锤，docs/truth 内同样只黄）
+  sectionMinProse: 3, // 小节级密度检查最少行数（防小样本误伤）
+  sectionMinHits: 2, // 小节级计黄最少命中数（7a 历史词 / 7b 噪声行同用）
+  cellNearChars: 180, // 7c 近阈值下限：此值~cellMaxChars 且高信号也黄（防贴线躲过）
+  cellNearMinSignals: 2, // 近阈值单元计黄所需信号类别数
+  introQuoteWords: ['旧文档', '反转', '核验', '附C', '欠账', '排期', '待确认', '待裁决'], // 7d 导语（标题后紧邻 blockquote）考古/欠账词
+  introQuoteMinWords: 2, // 导语命中不同词数达到此值标黄
 };
 let config = JSON.parse(JSON.stringify(DEFAULTS));
 const cfgFile = configPath ? path.resolve(configPath) : path.join(root, 'docloop.config.json');
@@ -352,8 +359,19 @@ if (structurePresent) {
   const anchorPat = /[\w./-]+\.(?:md|mjs|cjs|jsx?|tsx?|py|json|ya?ml|go|rs|java|kt|css|html)(?::\d+)?|第\s*\d+\s*行/;
   const parenPat = /[（(][^（）()]{30,}[）)]/;
   const hint = '建议按 rituals/lint.md 的改写 recipe 拆：当前规则表 + 实现边界表 + 追溯/证据链接';
-  // 信号统计前剥 markdown 链接目标——规范引用（链接、行内代码锚点）正是机制要的写法，裸写的才算噪声
+  // 信号统计前剥 markdown 链接目标与行内代码——规范引用正是机制要的写法，裸写的才算噪声
   const stripLinks = (t) => t.replace(/\]\([^)]*\)/g, ']');
+  const stripInline = (t) => t.replace(/`[^`\n]*`/g, ' ');
+  const signalsOf = (s) => {
+    let sig = 0;
+    if (idPat.test(s)) sig++;
+    if (datePat.test(s)) sig++;
+    if (anchorPat.test(s)) sig++;
+    if (config.noiseWords.some((w) => s.includes(w))) sig++;
+    if (parenPat.test(s)) sig++;
+    return sig;
+  };
+  const isLedger = (s) => s.split('|').length >= 3; // 台账行（含 ≥2 个管道符，如登记簿裸管道行）密集是契约，7b 不计
   for (const dir of TRUTH_DIRS) {
     if (!exists(dir)) continue;
     const isCore = path.resolve(dir) === path.resolve(TRUTH);
@@ -362,55 +380,100 @@ if (structurePresent) {
     for (const f of mdFiles(dir)) {
       const raw = read(f);
       const text = stripCode(raw);
-      // 7a-红：时间线 / 变更历史小节标题
+      // 7a-红：时间线 / 变更历史小节标题；7a-黄：标题命中追溯/欠账词表（强嫌疑非实锤，docs/truth 内同样只黄）
       for (const m of text.matchAll(/^#{1,6}\s+(.+?)\s*$/gm)) {
-        if (compoundPat.test(m[1]) || bareTitlePat.test(m[1]))
+        if (compoundPat.test(m[1]) || bareTitlePat.test(m[1])) {
           mark(7, `${rel(f)} 出现时间线/变更历史小节：「${m[1]}」——truth 只写当前口径，历史归 git 与 past/${softNote}`);
-      }
-      // 7a-黄：过程性词汇密度
-      const lines = countLines(text);
-      if (!lines) continue;
-      const found = [];
-      let hits = 0;
-      for (const w of config.historyWords) {
-        const n = text.split(w).length - 1;
-        if (n > 0) {
-          hits += n;
-          found.push(`${w}×${n}`);
+        } else {
+          const w = config.noiseTitleWords.find((t) => m[1].includes(t));
+          if (w) yellow(7, `${rel(f)} 小节标题带追溯/欠账口吻：「${m[1]}」（命中「${w}」）——标题只写当前主题，反转与欠账归追溯/欠账表。${hint}`);
         }
       }
-      const per100 = (hits * 100) / lines;
-      if (per100 > config.historyDensityPer100)
-        yellow(7, `${rel(f)} 正文历史化嫌疑：过程性词汇 ${hits} 次 / ${lines} 行（每百行 ${per100.toFixed(1)} > ${config.historyDensityPer100}）——${found.join('、')}。${hint}`);
-      // 7b/7c 扫描面：剥 frontmatter（verified: 日期不是正文噪声）再剥代码与链接目标
+      // 小节切分：剥 frontmatter（verified: 日期不是正文噪声），逐行跳过代码围栏、剥行内代码与链接目标，按 heading 分组
       const fmEnd = raw.startsWith('---') ? raw.indexOf('\n---', 3) : -1;
-      const body = stripLinks(stripCode(fmEnd === -1 ? raw : raw.slice(fmEnd + 4))).split('\n');
-      // 7b-黄：噪声行——散文 / bullet 同行混排多类信号；表格 / 台账行（含 ≥2 个管道符，如登记簿裸管道行）与标题不计——台账密集是契约
-      const isLedger = (s) => s.split('|').length >= 3;
-      const prose = body.map((l) => l.trim()).filter((s) => s && !isLedger(s) && !s.startsWith('|') && !s.startsWith('#'));
-      const noisy = [];
-      for (const s of prose) {
-        let sig = 0;
-        if (idPat.test(s)) sig++;
-        if (datePat.test(s)) sig++;
-        if (anchorPat.test(s)) sig++;
-        if (config.noiseWords.some((w) => s.includes(w))) sig++;
-        if (parenPat.test(s)) sig++;
-        if (sig >= config.noiseMinSignals) noisy.push(s);
+      const rawLines = (fmEnd === -1 ? raw : raw.slice(fmEnd + 4)).split('\n');
+      const sections = [{ title: '（文首）', lines: [], intro: [], afterHead: false }];
+      let inFence = false;
+      for (const l of rawLines) {
+        if (/^\s*```/.test(l)) { inFence = !inFence; continue; }
+        if (inFence) continue;
+        const h = /^#{1,6}\s+(.+?)\s*$/.exec(l);
+        if (h) { sections.push({ title: h[1], lines: [], intro: [], afterHead: true }); continue; }
+        const s = stripLinks(stripInline(l)).trim();
+        if (!s) continue;
+        const cur = sections[sections.length - 1];
+        if (cur.afterHead) {
+          if (s.startsWith('>')) cur.intro.push(s.replace(/^>+\s*/, '')); // 标题后紧邻 blockquote 连续收集为导语（7d）
+          else cur.afterHead = false;
+        }
+        cur.lines.push(s);
       }
-      const nPer100 = prose.length ? (noisy.length * 100) / prose.length : 0;
-      if (nPer100 > config.noiseLinePer100)
-        yellow(7, `${rel(f)} 阅读面噪声：${noisy.length}/${prose.length} 行混排多类信号（每百行 ${nPer100.toFixed(1)} > ${config.noiseLinePer100}）——这段像证据明细。${hint}。示例：「${noisy[0].slice(0, 50)}…」`);
-      // 7c-黄：超长 bullet / 表格单元格
+      // 小节级统计——密度先按小节算，防"局部脏被全文稀释"（issue #2 评论漏检根因）；行数/命中数门槛防小样本误伤
+      const stats = sections.map((sec) => {
+        const prose = sec.lines.filter((s) => !isLedger(s) && !s.startsWith('|'));
+        const noisy = prose.filter((s) => signalsOf(s) >= config.noiseMinSignals);
+        let hHits = 0;
+        const hFound = [];
+        for (const w of config.historyWords) {
+          const n = sec.lines.reduce((a, s) => a + (s.split(w).length - 1), 0);
+          if (n) { hHits += n; hFound.push(`${w}×${n}`); }
+        }
+        return { sec, prose, noisy, hHits, hFound };
+      });
+      const secOk = (n, len) => len >= config.sectionMinProse && n >= config.sectionMinHits;
+      // 7a-黄：过程性词汇密度——小节级命中报小节标题，无小节命中回退整文件口径（不重复报）
+      const secA = stats.filter((st) => secOk(st.hHits, st.sec.lines.length) && (st.hHits * 100) / st.sec.lines.length > config.historyDensityPer100);
+      for (const st of secA)
+        yellow(7, `${rel(f)} 「${st.sec.title}」正文历史化嫌疑：过程性词汇 ${st.hHits} 次 / ${st.sec.lines.length} 行——${st.hFound.join('、')}。${hint}`);
+      if (!secA.length) {
+        const lines = countLines(text);
+        const found = [];
+        let hits = 0;
+        for (const w of config.historyWords) {
+          const n = text.split(w).length - 1;
+          if (n > 0) {
+            hits += n;
+            found.push(`${w}×${n}`);
+          }
+        }
+        const per100 = lines ? (hits * 100) / lines : 0;
+        if (per100 > config.historyDensityPer100)
+          yellow(7, `${rel(f)} 正文历史化嫌疑：过程性词汇 ${hits} 次 / ${lines} 行（每百行 ${per100.toFixed(1)} > ${config.historyDensityPer100}）——${found.join('、')}。${hint}`);
+      }
+      // 7b-黄：噪声行（散文 / bullet 同行混排 ≥noiseMinSignals 类信号）——小节级命中报小节，无命中回退整文件
+      const secB = stats.filter((st) => secOk(st.noisy.length, st.prose.length) && (st.noisy.length * 100) / st.prose.length > config.noiseLinePer100);
+      for (const st of secB)
+        yellow(7, `${rel(f)} 「${st.sec.title}」阅读面噪声：${st.noisy.length}/${st.prose.length} 行混排多类信号——这段像证据明细。${hint}。示例：「${st.noisy[0].slice(0, 50)}…」`);
+      if (!secB.length) {
+        const prose = stats.flatMap((st) => st.prose);
+        const noisy = stats.flatMap((st) => st.noisy);
+        const nPer100 = prose.length ? (noisy.length * 100) / prose.length : 0;
+        if (nPer100 > config.noiseLinePer100)
+          yellow(7, `${rel(f)} 阅读面噪声：${noisy.length}/${prose.length} 行混排多类信号（每百行 ${nPer100.toFixed(1)} > ${config.noiseLinePer100}）——这段像证据明细。${hint}。示例：「${noisy[0].slice(0, 50)}…」`);
+      }
+      // 7c-黄：超长 bullet / 表格单元格；近阈值（cellNearChars~cellMaxChars 字）且高信号也黄——防贴线躲过
       const units = [];
-      for (const l of body) {
-        const s = l.trim();
+      for (const s of sections.flatMap((x) => x.lines)) {
         if (isLedger(s) || s.startsWith('|')) units.push(...s.split('|').map((c) => c.trim()).filter(Boolean));
         else if (/^[-*+]\s/.test(s)) units.push(s);
       }
       const over = units.filter((u) => [...u].length > config.cellMaxChars);
       if (over.length)
         yellow(7, `${rel(f)} ${over.length} 个超长 bullet/单元格（最长 ${Math.max(...over.map((u) => [...u].length))} 字 > ${config.cellMaxChars}）。${hint}`);
+      const near = units.filter((u) => {
+        const n = [...u].length;
+        return n > config.cellNearChars && n <= config.cellMaxChars && signalsOf(u) >= config.cellNearMinSignals;
+      });
+      if (near.length)
+        yellow(7, `${rel(f)} ${near.length} 个近阈值高信号 bullet/单元格（${config.cellNearChars}~${config.cellMaxChars} 字且 ≥${config.cellNearMinSignals} 类信号）——贴线不豁免。${hint}。示例：「${near[0].slice(0, 50)}…」`);
+      // 7d-黄：导语混排——小节标题后紧邻 blockquote 命中多个考古/欠账词
+      for (const { sec } of stats) {
+        if (!sec.intro.length) continue;
+        const it = sec.intro.join(' ');
+        const hitW = config.introQuoteWords.filter((w) => it.includes(w));
+        if (hitW.length >= config.introQuoteMinWords)
+          yellow(7, `${rel(f)} 「${sec.title}」导语混排考古/欠账（命中：${hitW.join('、')}）——导语只说当前读者与权威来源，考古归追溯链接。${hint}`);
+      }
     }
   }
   if (!structurePresent) yellow(7, `未装机（无 ${config.docsDir}/）：仅跑阅读面检查，结构检查 1–6 跳过——迁移坡道，装机是正道（rituals/init.md）`);

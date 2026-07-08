@@ -18,7 +18,7 @@ node <本skill目录>/scripts/docloop_lint.mjs [项目根] [--config docloop.con
 | 4 | 腐烂检测 | frontmatter `verified:` vs `code:` glob 内代码的 git 活跃度；未声明 code: 退化为日期阈值 |
 | 5 | 孤儿条目 | 账本里未排期且跨过 ≥1 个已结算迭代的条目（v1 近似：past 非空即对未排期条目提醒）；任务 covers 声称完成但账本未勾 |
 | 6 | inbox 积压 | 未裁决素材躺尸标黄 |
-| 7 | 历史痕迹与阅读面噪声 | **7a**：truth 出现"变更历史 / 修订记录 / 进展时间线"类小节标题红；过程词（`historyWords`）密度超阈（`historyDensityPer100`，默认每百行 5）黄。**7b**：散文 / bullet 行混排 ≥3 类信号（编号、日期、裸代码锚点、`noiseWords`、超长括号）计噪声行，占比超阈（`noiseLinePer100`，默认每百行 10）黄；表格行不计。**7c**：bullet / 单元格超 `cellMaxChars`（默认 200 字）黄。代码块、行内代码、链接目标不计信号。唯一可经 `truthDirs` 扫迁移期 truth-like 路径的检查，docs/truth 之外只黄不红（D-014） |
+| 7 | 历史痕迹与阅读面噪声 | **7a**：truth 出现"变更历史 / 修订记录 / 进展时间线"类小节标题红；标题命中追溯 / 欠账词表（`noiseTitleWords`，如 `裁定反转` `字段欠账` `已落码`）黄——docs/truth 内同样只黄；过程词（`historyWords`）密度超阈（`historyDensityPer100`，默认每百行 5）黄。**7b**：散文 / bullet 行混排 ≥3 类信号（编号、日期、裸代码锚点、`noiseWords`、超长括号）计噪声行，占比超阈（`noiseLinePer100`，默认每百行 10）黄；表格行不计。7a 密度与 7b 均按 heading **小节级**先算（行数 ≥`sectionMinProse` 且命中 ≥`sectionMinHits` 才计，命中报小节标题 + 示例行；无小节命中回退整文件口径）——防局部脏被全文稀释。**7c**：bullet / 单元格超 `cellMaxChars`（默认 200 字）黄；近阈值（`cellNearChars` 默认 180 ~ 200 字）且命中 ≥`cellNearMinSignals`（默认 2）类信号也黄——防贴线躲过。**7d**：小节标题后紧邻 blockquote 命中 ≥`introQuoteMinWords` 个考古 / 欠账词（`introQuoteWords`，如 `旧文档` `反转` `附C`）黄——导语只说当前读者与权威来源。代码块、行内代码、链接目标不计信号。唯一可经 `truthDirs` 扫迁移期 truth-like 路径的检查，docs/truth 之外只黄不红（D-014） |
 
 ## 红黄分级与修复
 
@@ -30,7 +30,7 @@ node <本skill目录>/scripts/docloop_lint.mjs [项目根] [--config docloop.con
   - 疑似腐烂 → 人工核对：真腐了先改文档再更新 `verified:`，没腐只更新日期；
   - 孤儿条目 → 排期(T-###) / 挂起回链 CH / 显式否决，三选一；
   - inbox 积压 → 走 `rituals/change.md` 清掉；
-  - 过程词密度 / 阅读面噪声 / 超长单元 → 按下方改写 recipe 执行。
+  - 过程词密度 / 阅读面噪声 / 超长与近阈值单元 / 追溯口吻标题 / 导语混排 → 按下方改写 recipe 执行（标题黄项把反转 / 欠账字样移出标题，归追溯 / 欠账表；导语黄项改写为"当前读者 + 权威来源"一句话）。
 - 结算时黄项必须逐条写进 summary 未了事项（见 `rituals/iterate.md` 第 8 步）。
 
 ## 改写 recipe（agent 执行：正文历史化 / 阅读面噪声黄项的修法）
