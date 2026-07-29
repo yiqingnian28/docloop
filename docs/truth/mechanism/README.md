@@ -1,5 +1,5 @@
 ---
-verified: 2026-07-05
+verified: 2026-07-29
 code:
   - skills/docloop/**
 ---
@@ -73,4 +73,5 @@ docs/
 | [lifecycle.md](lifecycle.md) | 迭代生命周期：四仪式 + 结算清单 |
 | [budget-lint.md](budget-lint.md) | 上下文预算 + 体检（lint）规则 |
 | [sdd-riper.md](sdd-riper.md) | 与 sdd-riper 的分工与落点映射 |
+| [approval.md](approval.md) | 报批草案表达契约：树+账双视图 / 叶子纪律 / 流程组合 |
 | [use-cases.md](use-cases.md) | 支持用例全景（验收范围） |

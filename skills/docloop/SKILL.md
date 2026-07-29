@@ -1,6 +1,6 @@
 ---
 name: docloop
-description: 面向 AI 协作开发的项目文档维护机制：truth/now/past 三层 + 变更单裁决 + 体积预算体检。Use when 用户要初始化/安装项目文档结构（docloop、装机、init、三层骨架）、接入上游文档（PRD 定稿、设计稿、技术设计、挂锚、摘编 digest、条目账本 items）、处理需求变更（会议纪要、聊天记录、口头需求、inbox、变更单 CH、冲突检查、裁决）、迭代仪式（开迭代、迭代结算、冻结、summary、提前结算）、文档体检（lint、体积超限、死链、腐烂检测、孤儿条目、inbox 积压）、或考古（这条需求做了没、这个决策怎么来的）。
+description: 面向 AI 协作开发的项目文档维护机制：truth/now/past 三层 + 变更单裁决 + 体积预算体检。Use when 用户要初始化/安装项目文档结构（docloop、装机、init、三层骨架）、接入上游文档（PRD 定稿、设计稿、技术设计、挂锚、摘编 digest、条目账本 items）、处理需求变更（会议纪要、聊天记录、口头需求、inbox、变更单 CH、冲突检查、裁决）、迭代仪式（开迭代、迭代结算、冻结、summary、提前结算）、文档体检（lint、体积超限、死链、腐烂检测、孤儿条目、inbox 积压）、写报批草案（实施方案、实现草案、报批计划、测试分析、验收方案、功能树）、或考古（这条需求做了没、这个决策怎么来的）。
 ---
 
 # docloop
@@ -48,6 +48,7 @@ description: 面向 AI 协作开发的项目文档维护机制：truth/now/past 
 | 需求变了 / 收到纪要、聊天记录、口头需求 | `references/rituals/change.md` |
 | 开迭代 / 迭代结算 / now 超预算提前结算 | `references/rituals/iterate.md` |
 | 跑体检、解释体检结果、修红黄项 | `references/rituals/lint.md` |
+| 出实施方案 / 报批草案 / 测试分析 / 验收方案 | `references/rituals/approval.md` |
 | 写任一机制文档 | `references/templates/` 对应模板 |
 
 ## 渐进披露（读的纪律）
@@ -58,7 +59,7 @@ description: 面向 AI 协作开发的项目文档维护机制：truth/now/past 
 
 ## 与 sdd-riper 的分工
 
-- "任务怎么推进"（RIPER 门禁 / checkpoint / 证据验收）归 sdd-riper，产物按目标项目 AGENTS.md 落点映射进 docs/（任务包 = Feature Spec，同一个东西）。
+- "任务怎么推进"（RIPER 门禁 / checkpoint / 证据验收）归 sdd-riper，产物按目标项目 AGENTS.md 落点映射进 docs/（任务包 = Feature Spec，同一个东西）；报批草案的**表达契约**归本 skill（`rituals/approval.md`），流程门禁仍归 sdd-riper。
 - Reverse Sync 可直接回改 truth；`truth/sources/` 只能经 CH 裁决改写，Project Sync Candidate 不得直写。
 
 ## 输出与暂停

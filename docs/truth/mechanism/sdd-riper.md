@@ -1,5 +1,5 @@
 ---
-verified: 2026-07-05
+verified: 2026-07-29
 ---
 
 # 与 sdd-riper 的分工与落点映射
@@ -16,6 +16,8 @@ sdd-riper 的 `mydocs/*` 路径**只是默认建议，不是硬编码逻辑**：
 3. 已有项目实践过重映射（声明 Project Spec = `docs/`），skill 照此执行无碍。
 
 因此 docloop 采用**单根 `docs/`**（mydocs 退役），在目标项目 AGENTS.md 里声明一段落点映射即可。
+
+**表达格式同层可覆盖（2026-07-29 核实，CH-006）**：Feature Spec 模板（spec-template.md）与 mydocs 路径同住 references 层——即第 4 优先级"SDD 默认建议"；project-sync-boundary 明示"默认建议不是强制裁判，项目规则或用户指令优先"。故 AGENTS.md 声明可同时覆盖落点与表达格式，报批表达契约（见 [approval.md](approval.md)）无需 sdd-riper 上游改动。
 
 ## 落点映射表
 
@@ -38,10 +40,12 @@ handoff → docs/now/handoff/ · codemap → docs/truth/codemap/
 Project Spec/Memory 不设：长期真相= docs/truth/，规矩=本文件。
 truth/sources/（登记簿/摘编/账本）只能经 CH 裁决改写，Project Sync Candidate 不得直写。
 archive 由迭代结算的 summary 取代。
+任务包/报批草案的表达按 docloop approval 契约（树+账双视图·叶子挂条目 ID）。
 ```
 
 ## 职责接缝
 
+- 报批草案：**流程门禁归 sdd-riper，表达契约与落点归 docloop**（见 [approval.md](approval.md)）——经 AGENTS.md 声明缝合；
 - 任务包内嵌 RIPER checkpoint 结构（sdd-riper 的门禁在任务包内运转）；
 - sdd-riper 的 **Reverse Sync** 对接 docloop 的 truth 改写（实现偏差回改真相，任务包只记偏差）；
 - sdd-riper 的 **Project Sync Candidate** 落点即 docloop 的 truth/ 或 AGENTS.md（按上表）；
