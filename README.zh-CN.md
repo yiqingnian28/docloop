@@ -68,7 +68,7 @@ node <skill目录>/scripts/docloop_lint.mjs [项目根]
 | [`docs/truth/mechanism/`](docs/truth/mechanism/README.md) | 机制完整规范——skill 是它的发行版，truth 为准 |
 | [`docs/truth/decisions.md`](docs/truth/decisions.md) | 已定决策（D-001+） |
 | [`examples/mini/`](examples/mini/README.md) | 两个迭代的完整生命周期走读（微型书签管家） |
-| [`docs/now/`](docs/now/2026-09_i04_并行迭代/iteration.md) | 活跃迭代——项目状态只活在各自的 iteration.md |
+| [`docs/now/`](docs/now/) | 活跃迭代——项目状态只活在各自的 iteration.md |
 
 **本仓自举**：docloop 仓库自己就用 docloop 维护。它的第一张变更单、第一次结算、第一个冻结迭代都是真实发生的，就在历史里（`docs/past/`）。
 

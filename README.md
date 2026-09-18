@@ -68,7 +68,7 @@ Seven checks: structure & naming · size budgets (lines + bytes) · dead links &
 | [`docs/truth/mechanism/`](docs/truth/mechanism/README.md) | The mechanism's full specification — the skill is its distribution; truth wins |
 | [`docs/truth/decisions.md`](docs/truth/decisions.md) | Standing decisions (D-001+) |
 | [`examples/mini/`](examples/mini/README.md) | Complete two-iteration lifecycle walkthrough (a tiny bookmark manager) |
-| [`docs/now/`](docs/now/2026-09_i04_并行迭代/iteration.md) | Active iterations — project status lives only in their `iteration.md` |
+| [`docs/now/`](docs/now/) | Active iterations — project status lives only in their `iteration.md` |
 
 **Self-hosted**: this repository maintains itself with docloop. Its first change order, first settlement and first frozen iteration are real and in the history (`docs/past/`).
 
