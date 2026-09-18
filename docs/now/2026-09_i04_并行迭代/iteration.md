@@ -17,7 +17,7 @@ now/ 能同时承载多个作用域互斥的活跃迭代，各自独立开工、
 
 - [x] T-011 并行迭代机制真相改写（CH-007）
 - [x] T-012 lint 迭代子目录 + scope 互斥（CH-007）
-- [ ] T-013 skill 同步 + AGENTS.md + 本仓自举迁移（CH-007）
+- [x] T-013 skill 同步 + AGENTS.md + 本仓自举迁移（CH-007）
 
 ## Open Questions
 

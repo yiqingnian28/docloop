@@ -1,3 +1,8 @@
+---
+scope:            # 本迭代拥有的 truth 路径（glob，相对 docs/truth）；与其他活跃迭代不得重叠
+  - modules/<模块>/**
+---
+
 # 迭代 i## · <标题>（YYYY-MM-DD 开）
 
 ## 目标

@@ -16,28 +16,28 @@ description: 面向 AI 协作开发的项目文档维护机制：truth/now/past 
 | 层 | 性质 | 增长规律 |
 |---|---|---|
 | `docs/truth/` | 当前设计真相，滚动**改写** | 只随系统复杂度增长 |
-| `docs/now/` | 本迭代活文档（iteration / 任务包 / CH / inbox） | 迭代内增长，结束**清空** |
+| `docs/now/` | 活跃迭代的活文档，每迭代一目录 `YYYY-MM_i##_<标题>/`（iteration / 任务包 / CH / inbox） | 迭代内增长，结算**整体移出** |
 | `docs/past/` | 迭代冻结包，只增不改 | 随时间增长，**默认不进上下文** |
 
 ## 五条不变量（违反即红灯）
 
 1. truth 只随复杂度增长：改写不追加，truth 内禁止时间线 / 变更流水（历史归 git 与 past/）。
-2. now 每迭代结束必清空：整体冻结进 past/（未完任务包移动结转例外）。
+2. now 每迭代结束其目录必整体移出：冻结进 past/（未完任务包移动结转例外）；多迭代并行的唯一前提是**作用域互斥**（iteration.md `scope:` 不重叠）。
 3. past 默认不进上下文：唯一可日常引用的史料是各迭代 summary.md（≤1 页）。
-4. 规矩文件（AGENTS.md）只放规矩：项目状态只活在 now/iteration.md。
+4. 规矩文件（AGENTS.md）只放规矩：项目状态只活在各迭代的 iteration.md。
 5. 需求驱动的权威层改写必须经 CH 裁决：原始素材（纪要 / 聊天 / 口头）永不直接成为实现依据；实现驱动的 Reverse Sync 与 codemap 刷新可直写（涉及需求理解变化时补 CH）。
 
 ## 通用约定
 
-- 编号全局递增永不复位：S-##（上游源）、T-###（任务）、CH-###（变更单）；新号 = 全仓最大号 + 1（含 past/）。
+- 编号全局递增永不复位：S-##（上游源）、T-###（任务）、CH-###（变更单）、i##（迭代）；新号 = 全仓最大号 + 1（含 past/ 与所有活跃迭代）。
 - truth 层引用 T / CH **只写 ID 不写路径**（结算后路径必变）。
 - 每份 truth 文档带 frontmatter `verified: YYYY-MM-DD`；模块文档可加 `code:` glob（腐烂检测映射）。
-- 任务包 frontmatter 声明 `reads:`（必读集）与 `covers:`（覆盖账本条目）。
+- 任务包 frontmatter 声明 `reads:`（必读集）与 `covers:`（覆盖账本条目）；iteration.md frontmatter 声明 `scope:`（本迭代拥有的 truth 路径 glob，相对 docs/truth）。
 - 同一事实只在一处权威，别处只链接；正文语言跟随目标项目。
 
 ## 体积预算（超硬预算 = 红灯）
 
-模块 truth 300 行 · 任务包 250 · CH 80 · digest 150 · summary 120 · 其余 truth 文档 300 · SKILL 内核 150；开工必读集合计 ≤2000 行；now/ 总量 ≤2000 行（inbox 只计件数）。每档配套字节上限 = 行数 × 65。
+模块 truth 300 行 · 任务包 250 · CH 80 · digest 150 · summary 120 · 其余 truth 文档 300 · SKILL 内核 150；开工必读集合计 ≤2000 行（iteration.md 取任务所在迭代）；单个迭代目录总量 ≤2000 行（inbox 只计件数）；活跃迭代 >2 个黄。每档配套字节上限 = 行数 × 65。
 
 ## 仪式路由（何时读哪份）
 
@@ -46,7 +46,7 @@ description: 面向 AI 协作开发的项目文档维护机制：truth/now/past 
 | 给项目装 docloop（初始化 docs/ 三层 + AGENTS.md 声明） | `references/rituals/init.md` |
 | 接入上游权威文档：PRD / 设计稿 / 技术设计定稿 | `references/rituals/upstream.md` |
 | 需求变了 / 收到纪要、聊天记录、口头需求 | `references/rituals/change.md` |
-| 开迭代 / 迭代结算 / now 超预算提前结算 | `references/rituals/iterate.md` |
+| 开迭代 / 迭代结算 / 迭代超预算提前结算 / 并行迭代 | `references/rituals/iterate.md` |
 | 跑体检、解释体检结果、修红黄项 | `references/rituals/lint.md` |
 | 出实施方案 / 报批草案 / 测试分析 / 验收方案 | `references/rituals/approval.md` |
 | 写任一机制文档 | `references/templates/` 对应模板 |
@@ -55,7 +55,7 @@ description: 面向 AI 协作开发的项目文档维护机制：truth/now/past 
 
 - 默认读摘编与 truth，不读上游全文；要细节时按账本锚点深读原文**特定章节**。
 - 实现依据 = 原文章节（按任务包 covers 条目拉取），摘编只是导航与对齐契约。
-- inbox 不进上下文（只是 CH 的附件线索）；past/ 默认不读，考古先 summary 再按链接精读单份。
+- inbox 不进上下文（只是 CH 的附件线索）；past/ 默认不读，考古先 summary 再按链接精读单份；其他活跃迭代的目录默认不读，起草 CH 时只读其 changes/。
 
 ## 与 sdd-riper 的分工
 

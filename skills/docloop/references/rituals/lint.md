@@ -12,9 +12,9 @@ node <本skill目录>/scripts/docloop_lint.mjs [项目根] [--config docloop.con
 
 | # | 检查 | 判定 |
 |---|---|---|
-| 1 | 目录合规 | truth/now/past 骨架、S-## / T-### / CH-### 命名与查重、模块目录 ≤3 层（以 modules/ 为根） |
-| 2 | 体积超限 | 各档预算（行数 + 字节双口径，任一超即超）+ 每个开放任务的 boot set 实算取最大 |
-| 3 | 死链 | 文档链接指向存在目标；ID 引用（T/CH/S）在 now/ 与 past/ 两处解析 |
+| 1 | 目录合规 | truth/now/past 骨架、S-## / T-### / CH-### 命名与查重、模块目录 ≤3 层（以 modules/ 为根）；now/ 顶层只放迭代目录 `YYYY-MM_i##_<标题>/` 且各含 iteration.md，无活跃迭代黄；作用域：`scope:` 缺失黄、活跃迭代间重叠（现有 truth 文件交集或 glob 前缀嵌套）红、CH 链接本迭代 scope 外的模块 truth 黄（模块根之外的共享文档豁免） |
+| 2 | 体积超限 | 各档预算（行数 + 字节双口径，任一超即超；now 总量按单个迭代目录计）+ 每个开放任务的 boot set 实算取最大（iteration.md 取任务所在迭代）+ 活跃迭代数超 `budgets.activeIterations`（默认 2）黄 |
+| 3 | 死链 | 文档链接指向存在目标；ID 引用（T/CH/S）在所有活跃迭代与 past/ 解析 |
 | 4 | 腐烂检测 | frontmatter `verified:` vs `code:` glob 内代码的 git 活跃度；未声明 code: 退化为日期阈值 |
 | 5 | 孤儿条目 | 账本里未排期且跨过 ≥1 个已结算迭代的条目（v1 近似：past 非空即对未排期条目提醒）；任务 covers 声称完成但账本未勾 |
 | 6 | inbox 积压 | 未裁决素材躺尸标黄 |
@@ -24,12 +24,12 @@ node <本skill目录>/scripts/docloop_lint.mjs [项目根] [--config docloop.con
 
 - **红**（违反不变量 / 超硬预算，阻断结算）：
   - 体积超限 → 拆分或压缩（模块拆目录、任务拆包、摘编瘦身）；
-  - 死链 → 修链接或补目标；目录 / 命名不合规 → 归位改名；编号重复 → 重新编号；
+  - 死链 → 修链接或补目标；目录 / 命名不合规 → 归位改名；编号重复 → 重新编号；活跃迭代作用域重叠 → 收窄一方 scope 或合并迭代；
   - 时间线 / 变更历史小节 → 历史内容迁出 truth（该考古的归 past/ 与 git），正文改写成当前口径（truthDirs 扩展路径上同样发现只黄不红）。
 - **黄**（提醒不阻断）：
   - 疑似腐烂 → 人工核对：真腐了先改文档再更新 `verified:`，没腐只更新日期；
   - 孤儿条目 → 排期(T-###) / 挂起回链 CH / 显式否决，三选一；
-  - inbox 积压 → 走 `rituals/change.md` 清掉；
+  - inbox 积压 → 走 `rituals/change.md` 清掉；缺 scope → 补 iteration.md frontmatter；CH 越界 → 拥有方迭代开 CH 或裁决扩 scope；活跃迭代过多 → 先结算一个；
   - 过程词密度 / 阅读面噪声 / 超长与近阈值单元 / 追溯口吻标题 / 导语混排 → 按下方改写 recipe 执行（标题黄项把反转 / 欠账字样移出标题，归追溯 / 欠账表；导语黄项改写为"当前读者 + 权威来源"一句话）。
 - 结算时黄项必须逐条写进 summary 未了事项（见 `rituals/iterate.md` 第 8 步）。
 

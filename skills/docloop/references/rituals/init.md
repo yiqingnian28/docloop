@@ -15,16 +15,17 @@ docs/
 │   ├── sources/index.md # 上游登记簿（模板 templates/sources-index.md）
 │   ├── modules/         # 模块真相：单文件起步，超 300 行才拆目录，最深 3 层
 │   └── codemap/         # 代码地形（sdd-riper codemap 产物落点）
-├── now/
-│   ├── iteration.md     # 模板 templates/iteration.md
-│   └── tasks/ changes/ inbox/ context/ handoff/
+├── now/                 # 每迭代一个目录（命名同 past）；多个并行时作用域互斥
+│   └── YYYY-MM_i01_<标题>/
+│       ├── iteration.md # 模板 templates/iteration.md（frontmatter scope:）
+│       └── tasks/ changes/ inbox/ context/ handoff/
 └── past/                # 空；首次结算才有内容
 ```
 
 （`architecture.md` / `glossary.md` 可选，复杂度到了再建。）
 
 3. **写 AGENTS.md**：按 `templates/agents-md.md` 片段追加到目标项目 AGENTS.md（没有则新建）。已有 AGENTS.md 时只追加 docloop 段落，不动其他内容。片段必须保留两条防冲突声明：`truth/sources/` 只能经 CH 改写；PROJECT_* / archive 不设（防 sdd-riper 默认行为建出平行目录）。
-4. **开首个迭代**：按 `templates/iteration.md` 写 `now/iteration.md`（目标 / 范围 / 任务清单 / Open Questions）。
+4. **开首个迭代**：建 `now/YYYY-MM_i01_<标题>/`，按 `templates/iteration.md` 写 `iteration.md`（scope / 目标 / 范围 / 任务清单 / Open Questions）。
 5. **可选接源**：有现成 PRD / 设计稿要接 → 转 `rituals/upstream.md`。
 6. **体检验证**：按 `rituals/lint.md` 跑一遍，新装机应全绿。
 

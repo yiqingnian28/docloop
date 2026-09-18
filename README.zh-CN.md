@@ -18,15 +18,15 @@ docloop 的答案：**按知识的"时间性"分层，让"变化"有自己的家
 | 层 | 性质 | 增长规律 |
 |---|---|---|
 | `docs/truth/` | 当前设计真相，滚动**改写** | 只随系统复杂度增长 |
-| `docs/now/` | 本迭代活文档（任务包 / 变更单 / inbox） | 迭代内增长，结束**清空** |
+| `docs/now/` | 活跃迭代的活文档，每迭代一目录（任务包 / 变更单 / inbox） | 迭代内增长，结算**整体移出** |
 | `docs/past/` | 迭代冻结包，只增不改 | 随时间增长，**默认不进上下文** |
 
 五条不变量（机制宪法）：
 
 1. **truth 只随复杂度增长，不随时间增长**——改写不追加，truth 内不留时间线（历史归 git 和 past/）。
-2. **now 每迭代结束必清空**——整体冻结进 past/，新迭代从干净开始。
+2. **now 每迭代结束其目录必整体移出**——冻结进 past/；多迭代并行的唯一前提是**作用域互斥**（各自 iteration.md 声明 `scope:`）。
 3. **past 默认不进上下文**——唯一可日常引用的史料是各迭代一页 summary。
-4. **规矩文件（AGENTS.md）只放规矩**——项目状态只活在 `now/iteration.md`。
+4. **规矩文件（AGENTS.md）只放规矩**——项目状态只活在各迭代的 `iteration.md`。
 5. **需求驱动的权威层改写必须经变更单（CH）裁决**——纪要 / 聊天等原始素材永不直接成为实现依据。
 
 ## 循环本体
@@ -68,7 +68,7 @@ node <skill目录>/scripts/docloop_lint.mjs [项目根]
 | [`docs/truth/mechanism/`](docs/truth/mechanism/README.md) | 机制完整规范——skill 是它的发行版，truth 为准 |
 | [`docs/truth/decisions.md`](docs/truth/decisions.md) | 已定决策（D-001+） |
 | [`examples/mini/`](examples/mini/README.md) | 两个迭代的完整生命周期走读（微型书签管家） |
-| [`docs/now/iteration.md`](docs/now/iteration.md) | 当前迭代——项目状态只活在这里 |
+| [`docs/now/`](docs/now/2026-09_i04_并行迭代/iteration.md) | 活跃迭代——项目状态只活在各自的 iteration.md |
 
 **本仓自举**：docloop 仓库自己就用 docloop 维护。它的第一张变更单、第一次结算、第一个冻结迭代都是真实发生的，就在历史里（`docs/past/`）。
 

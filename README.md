@@ -18,15 +18,15 @@ docloop's answer: **layer knowledge by its age, give "change" a home of its own,
 | Layer | Nature | Growth law |
 |---|---|---|
 | `docs/truth/` | Current design truth, **rewritten** in place | grows only with system complexity |
-| `docs/now/` | This iteration's live docs (tasks / change orders / inbox) | grows within an iteration, **cleared** at settle |
+| `docs/now/` | Live docs of active iterations, one directory per iteration (tasks / change orders / inbox) | grows within an iteration, **moved out wholesale** at settle |
 | `docs/past/` | Frozen iteration packages, append-only | grows with time, **out of context by default** |
 
 Five invariants (the constitution):
 
 1. **Truth grows with complexity, not time** — rewrite, never append; no timelines inside truth (history belongs to git and `past/`).
-2. **`now/` is cleared every iteration** — frozen wholesale into `past/`; the new iteration starts clean.
+2. **Each iteration's directory leaves `now/` wholesale at settle** — frozen into `past/`; iterations may run in parallel only with **disjoint scopes** (`scope:` in each `iteration.md`).
 3. **`past/` stays out of the model context** — the only citable history is each iteration's one-page `summary.md`.
-4. **Rule files (AGENTS.md) hold rules only** — project status lives solely in `now/iteration.md`.
+4. **Rule files (AGENTS.md) hold rules only** — project status lives solely in each iteration's `iteration.md`.
 5. **Requirement-driven rewrites of the authoritative layer must pass change-order (CH) adjudication** — raw material (meeting notes / chat) never becomes an implementation basis directly.
 
 ## The loop
@@ -68,7 +68,7 @@ Seven checks: structure & naming · size budgets (lines + bytes) · dead links &
 | [`docs/truth/mechanism/`](docs/truth/mechanism/README.md) | The mechanism's full specification — the skill is its distribution; truth wins |
 | [`docs/truth/decisions.md`](docs/truth/decisions.md) | Standing decisions (D-001+) |
 | [`examples/mini/`](examples/mini/README.md) | Complete two-iteration lifecycle walkthrough (a tiny bookmark manager) |
-| [`docs/now/iteration.md`](docs/now/iteration.md) | Current iteration — project status lives only here |
+| [`docs/now/`](docs/now/2026-09_i04_并行迭代/iteration.md) | Active iterations — project status lives only in their `iteration.md` |
 
 **Self-hosted**: this repository maintains itself with docloop. Its first change order, first settlement and first frozen iteration are real and in the history (`docs/past/`).
 
