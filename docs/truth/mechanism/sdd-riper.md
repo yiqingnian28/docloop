@@ -1,5 +1,5 @@
 ---
-verified: 2026-07-29
+verified: 2026-09-17
 ---
 
 # 与 sdd-riper 的分工与落点映射
@@ -23,9 +23,9 @@ sdd-riper 的 `mydocs/*` 路径**只是默认建议，不是硬编码逻辑**：
 
 | sdd-riper 产物 | 其默认落点 | docloop 落点 |
 |---|---|---|
-| Feature Spec（`sdd_bootstrap`） | `mydocs/specs/` | `docs/now/tasks/T-###_<名>.md`（任务包＝Feature Spec，同一个东西） |
-| context bundle | `mydocs/context/` | `docs/now/context/`（随迭代冻结） |
-| handoff 交接包 | `mydocs/handoff/` | `docs/now/handoff/`（随迭代冻结） |
+| Feature Spec（`sdd_bootstrap`） | `mydocs/specs/` | `docs/now/<迭代>/tasks/T-###_<名>.md`（任务包＝Feature Spec，同一个东西） |
+| context bundle | `mydocs/context/` | `docs/now/<迭代>/context/`（随迭代冻结） |
+| handoff 交接包 | `mydocs/handoff/` | `docs/now/<迭代>/handoff/`（随迭代冻结） |
 | codemap | `mydocs/codemap/` | `docs/truth/codemap/`（代码现状索引归真相层·吃腐烂检测） |
 | archive 双视角归档 | `mydocs/archive/` | 迭代级被 `past/<迭代>/summary.md` 取代；任务级落 now/ 随迭代冻结 |
 | Project Spec / Project Memory | `mydocs/project/` | 不用——长期真相 = `docs/truth/`，规矩 = AGENTS.md |
@@ -35,8 +35,9 @@ sdd-riper 的 `mydocs/*` 路径**只是默认建议，不是硬编码逻辑**：
 ```markdown
 ## sdd-riper 落点映射（docloop）
 本仓知识落点按 docloop 组织（覆盖 SDD 默认路径）：
-Feature Spec → docs/now/tasks/T-###_<名>.md · context → docs/now/context/
-handoff → docs/now/handoff/ · codemap → docs/truth/codemap/
+本次工作属于哪个迭代由任务指定（<迭代> = docs/now/ 下的目标迭代目录）：
+Feature Spec → docs/now/<迭代>/tasks/T-###_<名>.md · context → docs/now/<迭代>/context/
+handoff → docs/now/<迭代>/handoff/ · codemap → docs/truth/codemap/
 Project Spec/Memory 不设：长期真相= docs/truth/，规矩=本文件。
 truth/sources/（登记簿/摘编/账本）只能经 CH 裁决改写，Project Sync Candidate 不得直写。
 archive 由迭代结算的 summary 取代。

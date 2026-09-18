@@ -1,5 +1,5 @@
 ---
-verified: 2026-07-07
+verified: 2026-09-17
 ---
 
 # 三层模型细则
@@ -30,11 +30,11 @@ verified: 2026-07-07
 
 ## now/ 当下层
 
-**放什么**：本迭代的一切活文档——
+**放什么**：每个活跃迭代一个目录 `YYYY-MM_i##_<标题>/`（命名与 past/ 一致），目录内是该迭代的一切活文档——
 
 | 文件 | 用途 |
 |---|---|
-| `iteration.md` | 迭代目标 / 范围 / 任务清单。**项目状态唯一的家**（规矩文件不放状态） |
+| `iteration.md` | 迭代目标 / 范围 / 任务清单；frontmatter `scope:` 声明本迭代拥有的 truth 路径（相对 `docs/truth/` 的 glob 列表）。**项目状态唯一的家**（规矩文件不放状态） |
 | `tasks/T-###_<名>.md` | 任务包 = sdd-riper Feature Spec（目标 / In-Out / Done Contract / checkpoint / 验证 / 偏差） |
 | `changes/CH-###_<名>.md` | 变更单（见 [change.md](change.md)） |
 | `inbox/` | 原始素材收件箱：纪要 / 聊天 / 口头需求原样存，待裁决 |
@@ -42,9 +42,11 @@ verified: 2026-07-07
 
 **读写规则**：
 
-- now/ 只活一个迭代；结算时**整体原样冻结**搬进 past/（未完任务包例外：移动结转进新迭代，见 [lifecycle.md](lifecycle.md)），新迭代从空的 now/ 开始。
+- 一个迭代 = 一个目录；结算时该目录**整体原样冻结**搬进 past/（未完任务包例外：移动结转进指定的接收迭代，见 [lifecycle.md](lifecycle.md)），其他活跃迭代不受影响。
+- 多个迭代并行的前提是**作用域互斥**：各自 `scope:` 声明的 truth 路径不重叠（lint 红）；`decisions.md` / `README.md` / `glossary.md` / `sources/` 等共享文档不属于任何 scope，各迭代都可改写。跨作用域的改动在拥有方迭代开 CH，或经 CH 扩自己的 scope（lint 对 CH 波及 scope 外的模块 truth 标黄）。
+- 单迭代项目同一布局，`now/` 下只有一个目录；`ls now/` 就是活跃迭代清单，不设索引文件。
 - inbox 内容**不进模型上下文**——它只是 CH 单的附件线索。
-- now/ 总量有预算；超限触发**强制提前结算**（见 [budget-lint.md](budget-lint.md)）。
+- 每个迭代目录总量有预算；超限触发该迭代**强制提前结算**（见 [budget-lint.md](budget-lint.md)）。
 
 ## past/ 史料层
 
