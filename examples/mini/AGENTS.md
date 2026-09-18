@@ -6,13 +6,13 @@
 
 ### 开工协议（新会话按序读）
 
-1. 本文（规矩）→ 2. `docs/now/iteration.md`（项目状态唯一的家）→ 3. 手头任务包 + 其 frontmatter `reads:` 声明的必读集
+1. 本文（规矩）→ 2. `docs/now/<目标迭代>/iteration.md`（项目状态唯一的家；多个活跃迭代时由任务指定）→ 3. 手头任务包 + 其 frontmatter `reads:` 声明的必读集
 
 ### 硬规则
 
-- 项目状态一律写 `docs/now/iteration.md`，不回写本文
+- 项目状态一律写所在迭代的 `iteration.md`，不回写本文
 - `docs/truth/` 只存当前真相：改写不追加，不留时间线；同一事实只在一处权威
-- `docs/truth/sources/`（登记簿 / 摘编 / 账本）只能经 CH 裁决改写；纪要 / 聊天 / 口头需求原样落 `docs/now/inbox/`，永不直接作为实现依据
+- `docs/truth/sources/`（登记簿 / 摘编 / 账本）只能经 CH 裁决改写；纪要 / 聊天 / 口头需求原样落所在迭代的 `inbox/`，永不直接作为实现依据
 - `docs/past/` 默认不读（考古先读 summary）；inbox 不进上下文
 - 拿不准的写对应文档 Open Questions，不臆造
 
@@ -23,8 +23,8 @@
 ### sdd-riper 落点映射（如安装）
 
 本仓知识落点按 docloop 组织（覆盖 SDD 默认路径）：
-Feature Spec → `docs/now/tasks/T-###_<名>.md` · context → `docs/now/context/`
-handoff → `docs/now/handoff/` · codemap → `docs/truth/codemap/`
+Feature Spec → `docs/now/<迭代>/tasks/T-###_<名>.md` · context → `docs/now/<迭代>/context/`
+handoff → `docs/now/<迭代>/handoff/` · codemap → `docs/truth/codemap/`
 Project Spec / Memory 不设：长期真相 = `docs/truth/`，规矩 = 本文件。
 truth/sources/ 只能经 CH 裁决改写，Project Sync Candidate 不得直写。
 archive 由迭代结算的 summary 取代。

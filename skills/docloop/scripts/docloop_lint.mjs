@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// docloop 体检脚本 · 七项检查（零依赖 Node ≥18 · D-012）
+// docloop 体检脚本 · 七项检查（零依赖 Node ≥18 · D-012）；now/ 每迭代一目录、作用域互斥（D-016）
 // 用法：node docloop_lint.mjs [项目根] [--config docloop.config.json]
 // 红 = 违反不变量 / 超硬预算（退出码 1，阻断结算）；黄 = 提醒不阻断（退出码 0）
 
@@ -20,7 +20,7 @@ for (let i = 0; i < argv.length; i++) {
 const DEFAULTS = {
   docsDir: 'docs',
   modulesRoot: 'docs/truth/modules',
-  budgets: { truthDoc: 300, task: 250, change: 80, digest: 150, summary: 120, skillKernel: 150, bootSet: 2000, nowTotal: 2000 },
+  budgets: { truthDoc: 300, task: 250, change: 80, digest: 150, summary: 120, skillKernel: 150, bootSet: 2000, nowTotal: 2000, activeIterations: 2 }, // nowTotal = 单个迭代目录总量；activeIterations = 活跃迭代数（超出黄）
   bytesPerLine: 65, // 字节上限 = 行数上限 × 65（≈ 每行一句中文；字节 ÷ 3.5 ≈ token）
   rotDays: 90, // 未声明 code: 的文档：verified 距今超此天数标黄
   rotCommits: 10, // 声明 code: 的文档：verified 之后 glob 内提交超此数标黄
@@ -110,10 +110,28 @@ if (!structurePresent && !TRUTH_DIRS.some(exists)) {
 }
 
 // ---------- 公共数据 ----------
-const iterFile = path.join(NOW, 'iteration.md');
-const iterText = exists(iterFile) ? read(iterFile) : '';
-const nowTasks = mdFiles(path.join(NOW, 'tasks'));
-const nowChanges = mdFiles(path.join(NOW, 'changes'));
+// now/ 每迭代一个目录（命名同 past：YYYY-MM_i##_<标题>），多个并行时作用域互斥（D-016）
+const ITER_DIR = /^\d{4}-\d{2}_i\d{2}.*$/;
+const toPosix = (p) => p.split(path.sep).join('/');
+// 极简 glob → 正则（** 跨目录，* 单段，? 单字符），路径相对 docs/truth
+const globToRe = (g) => new RegExp('^' + g.replace(/[.+^${}()|[\]\\]/g, '\\$&').replace(/\*\*\/?/g, '\u0000').replace(/\*/g, '[^/]*').replace(/\?/g, '[^/]').replace(/\u0000/g, '.*') + '$');
+const globPrefix = (g) => g.split(/[*?]/)[0]; // 通配前的字面前缀，用于判断两条 glob 是否嵌套
+const iterations = exists(NOW)
+  ? fs.readdirSync(NOW, { withFileTypes: true })
+      .filter((e) => e.isDirectory() && ITER_DIR.test(e.name))
+      .map((e) => {
+        const dir = path.join(NOW, e.name);
+        const iterFile = path.join(dir, 'iteration.md');
+        const iterText = exists(iterFile) ? read(iterFile) : '';
+        const fm = frontmatter(iterText);
+        const scope = Array.isArray(fm.scope) ? fm.scope : fm.scope ? [fm.scope] : [];
+        return { name: e.name, dir, iterFile, iterText, scope, tasks: mdFiles(path.join(dir, 'tasks')), changes: mdFiles(path.join(dir, 'changes')) };
+      })
+  : [];
+const iterOf = (f) => iterations.find((it) => f.startsWith(it.dir + path.sep));
+const iterText = iterations.map((it) => it.iterText).join('\n'); // 所有活跃迭代的 iteration.md 合并（ID 全仓唯一，合并查无歧义）
+const nowTasks = iterations.flatMap((it) => it.tasks);
+const nowChanges = iterations.flatMap((it) => it.changes);
 const pastDirs = exists(PAST)
   ? fs.readdirSync(PAST, { withFileTypes: true }).filter((e) => e.isDirectory()).map((e) => e.name)
   : [];
@@ -152,7 +170,6 @@ function resolveId(id) {
 if (structurePresent) {
   if (!exists(TRUTH)) red(1, 'docs/truth/ 不存在');
   if (!exists(NOW)) red(1, 'docs/now/ 不存在');
-  if (!exists(iterFile)) red(1, 'docs/now/iteration.md 不存在（项目状态唯一的家）');
   const allowDocs = new Set(['README.md', 'truth', 'now', 'past']);
   for (const e of fs.readdirSync(DOCS)) if (!allowDocs.has(e) && !e.startsWith('.')) red(1, `docs/ 下不认识的条目：${e}`);
   const modBase = path.relative(TRUTH, MODROOT).split(path.sep)[0];
@@ -162,8 +179,44 @@ if (structurePresent) {
     for (const e of fs.readdirSync(TRUTH, { withFileTypes: true }))
       if (e.isDirectory() && !allowTruth.has(e.name)) red(1, `docs/truth/ 下不认识的目录：${e.name}（模块根 = ${config.modulesRoot}）`);
   }
-  const allowNow = new Set(['iteration.md', 'tasks', 'changes', 'inbox', 'context', 'handoff']);
-  if (exists(NOW)) for (const e of fs.readdirSync(NOW)) if (!allowNow.has(e) && !e.startsWith('.')) red(1, `docs/now/ 下不认识的条目：${e}`);
+  // now/ 顶层只有迭代目录；每个迭代目录内是固定骨架
+  if (exists(NOW)) {
+    for (const e of fs.readdirSync(NOW, { withFileTypes: true })) {
+      if (e.name.startsWith('.')) continue;
+      if (!e.isDirectory() || !ITER_DIR.test(e.name)) red(1, `docs/now/ 下不认识的条目：${e.name}（now/ 顶层只放迭代目录 YYYY-MM_i##_<标题>/）`);
+    }
+    if (!iterations.length) yellow(1, 'docs/now/ 没有活跃迭代——按 rituals/iterate.md 开迭代');
+  }
+  const allowIter = new Set(['iteration.md', 'tasks', 'changes', 'inbox', 'context', 'handoff']);
+  for (const it of iterations) {
+    if (!exists(it.iterFile)) red(1, `${rel(it.dir)}/iteration.md 不存在（项目状态唯一的家）`);
+    for (const e of fs.readdirSync(it.dir)) if (!allowIter.has(e) && !e.startsWith('.')) red(1, `${rel(it.dir)}/ 下不认识的条目：${e}`);
+    if (exists(it.iterFile) && !it.scope.length) yellow(1, `${rel(it.iterFile)} 缺 frontmatter scope:（本迭代拥有的 truth 路径 glob，相对 docs/truth）`);
+  }
+  // 作用域互斥（D-016）：活跃迭代间 scope 重叠红——字面前缀嵌套，或在现有 truth 文件上实际交集
+  const truthRel = mdFiles(TRUTH).map((f) => toPosix(path.relative(TRUTH, f)));
+  const matched = (it) => new Set(truthRel.filter((r) => it.scope.some((g) => globToRe(g).test(r))));
+  for (let a = 0; a < iterations.length; a++)
+    for (let b = a + 1; b < iterations.length; b++) {
+      const A = iterations[a], B = iterations[b];
+      const nested = A.scope.some((ga) => B.scope.some((gb) => { const pa = globPrefix(ga), pb = globPrefix(gb); return pa.startsWith(pb) || pb.startsWith(pa); }));
+      const ma = matched(A), hit = [...matched(B)].filter((r) => ma.has(r));
+      if (nested || hit.length) red(1, `活跃迭代作用域重叠：${A.name} 与 ${B.name}${hit.length ? `（共同覆盖 ${hit[0]}${hit.length > 1 ? ` 等 ${hit.length} 份` : ''}）` : '（scope 前缀嵌套）'}——并行迭代必须作用域互斥`);
+    }
+  // CH 波及本迭代 scope 外的模块 truth → 黄（模块根之外的 decisions / README / sources 等为共享文档，豁免）
+  for (const it of iterations) {
+    if (!it.scope.length) continue;
+    for (const ch of it.changes) {
+      for (const m of stripCode(read(ch)).matchAll(/\[[^\]]*\]\(([^)\s]+)\)/g)) {
+        if (/^(https?:|mailto:|#)/.test(m[1])) continue;
+        const target = path.resolve(path.dirname(ch), decodeURIComponent(m[1].split('#')[0]));
+        if (!target.startsWith(MODROOT + path.sep) && target !== MODROOT) continue;
+        const r = toPosix(path.relative(TRUTH, target));
+        if (!it.scope.some((g) => globToRe(g).test(r) || (r + '/').startsWith(globPrefix(g))))
+          yellow(1, `${rel(ch)} 波及本迭代 scope 外的模块 truth：${r}——在拥有方迭代开 CH，或本单裁决扩 scope`);
+      }
+    }
+  }
   for (const f of nowTasks) if (!/^T-\d{3}_.+\.md$/.test(path.basename(f))) red(1, `任务包命名不合规：${rel(f)}（应为 T-###_<名>.md）`);
   for (const f of nowChanges) if (!/^CH-\d{3}_.+\.md$/.test(path.basename(f))) red(1, `变更单命名不合规：${rel(f)}（应为 CH-###_<名>.md）`);
   if (exists(sourcesDir)) {
@@ -204,16 +257,24 @@ if (structurePresent) {
   for (const f of nowChanges) over(f, config.budgets.change);
   for (const f of pastSummaries) over(f, config.budgets.summary);
   for (const k of kernels) over(k, config.budgets.skillKernel);
-  // now/ 总量（inbox 只计件数不计行数，件数归第 6 项管）
+  // 单个迭代目录总量（inbox 只计件数不计行数，件数归第 6 项管）；超限 → 该迭代强制提前结算
   const sep = path.sep;
-  const nowMd = mdFiles(NOW).filter((f) => !rel(f).split(sep).includes('inbox'));
-  const total = nowMd.reduce((s, f) => s + countLines(read(f)), 0);
-  if (total > config.budgets.nowTotal) red(2, `now/ 总量 ${total} 行 > ${config.budgets.nowTotal}——触发强制提前结算（见 lifecycle）`);
-  // boot set：每个开放任务实算一遍，取最大
-  const base = [path.join(root, 'AGENTS.md'), path.join(root, 'CLAUDE.md'), ...kernels, path.join(DOCS, 'README.md'), iterFile].filter(exists);
+  for (const it of iterations) {
+    const md = mdFiles(it.dir).filter((f) => !rel(f).split(sep).includes('inbox'));
+    const total = md.reduce((s, f) => s + countLines(read(f)), 0);
+    if (total > config.budgets.nowTotal) red(2, `${rel(it.dir)}/ 总量 ${total} 行 > ${config.budgets.nowTotal}——该迭代触发强制提前结算（见 lifecycle）`);
+  }
+  if (iterations.length > config.budgets.activeIterations)
+    yellow(2, `活跃迭代 ${iterations.length} 个 > ${config.budgets.activeIterations}——并行是给互不相干的工作线用的，不是用来推迟结算`);
+  // boot set：每个开放任务实算一遍（iteration.md 取任务包所在迭代），取最大；无任务时按每个迭代算
+  const base = [path.join(root, 'AGENTS.md'), path.join(root, 'CLAUDE.md'), ...kernels, path.join(DOCS, 'README.md')].filter(exists);
   let worst = null;
-  for (const task of nowTasks.length ? nowTasks : [null]) {
+  const bootUnits = nowTasks.length ? nowTasks : iterations.length ? iterations.map((it) => it.iterFile) : [null];
+  for (const unit of bootUnits) {
     const set = [...base];
+    const task = unit && nowTasks.includes(unit) ? unit : null;
+    const iterFile = task ? iterOf(task)?.iterFile : unit;
+    if (iterFile && exists(iterFile)) set.push(iterFile);
     if (task) {
       set.push(task);
       const fm = frontmatter(read(task));
@@ -234,7 +295,7 @@ if (structurePresent) {
   }
 }
 
-// ---------- 3 死链（markdown 链接 + ID 引用；ID 在 now 与 past 两处解析） ----------
+// ---------- 3 死链（markdown 链接 + ID 引用；ID 在所有活跃迭代与 past 解析） ----------
 if (structurePresent) {
   // past/ 冻结原件不查：相对链接随整体搬迁失效属已知，考古一律经 summary 进入
   const sep = path.sep;
@@ -339,10 +400,9 @@ if (structurePresent) {
 
 // ---------- 6 inbox 积压（黄） ----------
 if (structurePresent) {
-  const inbox = path.join(NOW, 'inbox');
-  if (exists(inbox)) {
-    const chText = nowChanges.map(read).join('\n');
-    for (const f of walk(inbox)) {
+  const chText = nowChanges.map(read).join('\n'); // 任一活跃迭代的 CH 引用即算已裁决
+  for (const it of iterations) {
+    for (const f of walk(path.join(it.dir, 'inbox'))) {
       const name = path.basename(f);
       if (name === '.gitkeep') continue;
       if (!chText.includes(name)) yellow(6, `inbox 素材未裁决：${rel(f)}（没有任何 CH 引用它）`);

@@ -5,7 +5,7 @@
 ## 开工协议（新会话按序读）
 
 1. 本文（规矩）
-2. [`docs/now/iteration.md`](docs/now/iteration.md)（当前迭代目标与任务——**项目状态只活在这里**）
+2. [`docs/now/<目标迭代>/iteration.md`](docs/now/2026-09_i04_并行迭代/iteration.md)（当前迭代目标与任务——**项目状态只活在这里**）
 3. 手头任务涉及的 [`docs/truth/mechanism/`](docs/truth/mechanism/README.md) 章节（按需，不全读）
 
 ## 硬规则
